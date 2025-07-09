@@ -14,6 +14,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { NotificationDropdown } from "../../components/NotificationDropdown";
+
 // Helper function to format date
 const formatDate = (dateString) => {
   const options = {
@@ -25,6 +26,8 @@ const formatDate = (dateString) => {
   };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
+
+
 
 // Severity Badge Component
 const SeverityBadge = ({ severity }) => {
@@ -55,6 +58,7 @@ const SeverityBadge = ({ severity }) => {
 };
 
 // Incident detail Modal
+
 const PLACEHOLDER_IMAGE = "https://via.placeholder.com/600x400?text=No+Image+Available";
 
 const IncidentDetailModal = ({ incident, onClose }) => {
@@ -140,6 +144,8 @@ const IncidentDetailModal = ({ incident, onClose }) => {
     </>
   );
 };
+
+
 
 // Incident Card Component
 const IncidentCard = ({ incident, onAccept, onReject, onViewDetails }) => {
@@ -255,7 +261,25 @@ const HospitalDashboard = () => {
     fetchAccidents();
   }, []);
 
-  const handleAcceptIncident = (incidentId) => {
+const handleAcceptIncident = async (incidentId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:8000/api/accidents/${incidentId}/accept/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error accepting accident:", errorData);
+      return;
+    }
+
+    // Update UI if accepted
     const updatedIncidents = incidents.map((incident) =>
       incident.id === incidentId
         ? { ...incident, status: "accepted" }
@@ -276,7 +300,12 @@ const HospitalDashboard = () => {
       setNotifications((prev) => [newNotification, ...prev]);
       setHasUnreadNotifications(true);
     }
-  };
+
+  } catch (error) {
+    console.error("Error in accept request:", error);
+  }
+};
+
 
   const handleRejectIncident = (incidentId) => {
     setIncidents((prev) =>
